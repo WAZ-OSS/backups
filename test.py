@@ -20,3 +20,11 @@ for fname in walk_through_files("."):
   for tag in tags.keys():
     print("  %s:  %s" % (tag,tags[tag]))
 
+#TODO: get fs-stat
+#TODO: get hash: md5/sha
+#TODO: store metadata {all} in DB index by {hash/exif-date/fs-date/basename}
+#TODO: create goups
+#TODO: automate redundancy generator in DB (duplicate across multiple locations)
+#TODO: automate dedupe in DB: field state{present|absent} (1 copy/location)
+#TODO: cyclic executor (DB->fs)
+#TODO: cyclic check hashes (DB==fs)
