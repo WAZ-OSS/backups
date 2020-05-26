@@ -62,6 +62,10 @@ def get_canonical_path(filename):
     except ValueError as err:
         print(f'EXIF[Image DateTime]="{image_datetime}" invalid format ({DATETIME_FORMAT})')
         raise err
+  else:
+    # TODO: sort by file modified timestamp
+    # TODO: Create alternative tool to inject file timestamp to exif?
+    raise Exception(f'missing EXIF datetime in "{filename}"')
 
 
 def log_to_index(origin_dir, target_dir, origin, target):
@@ -75,8 +79,11 @@ def log_to_index(origin_dir, target_dir, origin, target):
   relative_origin = origin[origin.startswith(origin_dir) and len(origin_dir)+1:]
   relative_target = target[target.startswith(target_dir) and len(target_dir)+1:]
 
+  print(f'{relative_target} <- {relative_origin}')
+
   with open(indexfile, 'at') as indexhandler:
     indexhandler.write(f'{relative_target}\t{relative_origin}\n')
+
 
 def quote_posix(shell_arg):
   return "\\'".join("'" + p + "'" for p in shell_arg.split("'"))
@@ -91,29 +98,27 @@ def sort_dir(origin_dir, target_dir):
   if not os.path.isdir(target_dir):
     raise Exception(f'Invalid target dir "{target_dir}"')
 
-  if os.path.realpath(origin_dir) == os.path.realpath(target_dir):
-    raise Exception(f'origin and target dir are the same "{origin_dir}"')
+  # if os.path.realpath(origin_dir) == os.path.realpath(target_dir):
+  #   raise Exception(f'origin and target dir are the same "{origin_dir}"')
 
   for origin in walk_through_files(origin_dir):
-    relative_target = os.path.join(target_dir, get_canonical_path(origin))
-    target = os.path.join(target_dir, relative_target)
+    try:
+      relative_target = os.path.join(target_dir, get_canonical_path(origin))
+      target = os.path.join(target_dir, relative_target)
 
-    if not relative_target:
-      print('no valid exif DateTime')
-      # logit, move to 'procceced dir/same-path'
-    elif target == origin:
-      raise Exception(f'sorting sorted files "{origin}"')
-      # ignore?
-    elif os.path.exists(target):
-      # logit, index, delete origin
-      pass
-    else:
-      log_to_index(origin_dir, target_dir, origin, target)
-      # move
-      pathlib.Path(os.path.dirname(target)).mkdir(parents=True, exist_ok=True)
-
-      print(f'mv {origin} {target}')
-      shutil.move(origin, target)
+      if target == origin:
+        # raise Exception(f'sorting sorted files "{origin}"')
+        pass
+      elif os.path.exists(target):
+        # logit, index, delete origin
+        pass
+      else:
+        log_to_index(origin_dir, target_dir, origin, target)
+        pathlib.Path(os.path.dirname(target)).mkdir(parents=True, exist_ok=True)
+        shutil.move(origin, target)
+    except Exception as e:
+      print(e)
+      # logit, move to 'no-exif dir'
 
   print('sort -u -o '+ quote_posix(target_dir+'/'+INDEX_FILE) + ' ' + quote_posix(target_dir+'/'+INDEX_FILE))
 
