@@ -14,7 +14,7 @@ import pathlib
 
 DATETIME_FORMAT="%Y:%m:%d %H:%M:%S"
 BLOCK_SIZE = 65536
-
+INDEX_FILE = 'index.tsv'
 
 def walk_through_files(path, file_extensions=['jpg','jpeg']):
   '''generates all descendant files of the path parameter filter by file extensions (case insensitive)'''
@@ -70,13 +70,16 @@ def log_to_index(origin_dir, target_dir, origin, target):
   The index is a file containing the list of file moved as:
     target<TAB>origin
   '''
-  indexfile = os.path.join(target_dir, 'index.tsv')
+  indexfile = os.path.join(target_dir, INDEX_FILE)
 
   relative_origin = origin[origin.startswith(origin_dir) and len(origin_dir)+1:]
   relative_target = target[target.startswith(target_dir) and len(target_dir)+1:]
 
   with open(indexfile, 'at') as indexhandler:
     indexhandler.write(f'{relative_target}\t{relative_origin}\n')
+
+def quote_posix(shell_arg):
+  return "\\'".join("'" + p + "'" for p in shell_arg.split("'"))
 
 
 
@@ -88,6 +91,8 @@ def sort_dir(origin_dir, target_dir):
   if not os.path.isdir(target_dir):
     raise Exception(f'Invalid target dir "{target_dir}"')
 
+  if os.path.realpath(origin_dir) == os.path.realpath(origin_dir):
+    raise Exception(f'origin and target dir are the same "{origin_dir}"')
 
   for origin in walk_through_files(origin_dir):
     relative_target = os.path.join(target_dir, get_canonical_path(origin))
@@ -110,7 +115,7 @@ def sort_dir(origin_dir, target_dir):
       print(f'mv {origin} {target}')
       shutil.move(origin, target)
 
-
+  print('sort -o '+ quote_posix(target_dir+'/'+INDEX_FILE) + ' ' + quote_posix(target_dir+'/'+INDEX_FILE))
 
 
 #TODO: get fs-stat
