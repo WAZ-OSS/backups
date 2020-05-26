@@ -91,7 +91,7 @@ def sort_dir(origin_dir, target_dir):
   if not os.path.isdir(target_dir):
     raise Exception(f'Invalid target dir "{target_dir}"')
 
-  if os.path.realpath(origin_dir) == os.path.realpath(origin_dir):
+  if os.path.realpath(origin_dir) == os.path.realpath(target_dir):
     raise Exception(f'origin and target dir are the same "{origin_dir}"')
 
   for origin in walk_through_files(origin_dir):
@@ -115,7 +115,7 @@ def sort_dir(origin_dir, target_dir):
       print(f'mv {origin} {target}')
       shutil.move(origin, target)
 
-  print('sort -o '+ quote_posix(target_dir+'/'+INDEX_FILE) + ' ' + quote_posix(target_dir+'/'+INDEX_FILE))
+  print('sort -u -o '+ quote_posix(target_dir+'/'+INDEX_FILE) + ' ' + quote_posix(target_dir+'/'+INDEX_FILE))
 
 
 #TODO: get fs-stat
