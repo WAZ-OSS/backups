@@ -1,0 +1,5 @@
+exifread
+python-decouple
+pylint
+flake8
+black
