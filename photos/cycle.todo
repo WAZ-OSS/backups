@@ -1,0 +1,16 @@
+estado deseado:
+    - copia full en varias ubicaciones fisicas
+        almenos una online, al menos una en disco externo
+    - sin archivos duplicados
+    - orden predecible
+        ej: YYYY/mm/dd/YYYYmmdd_HMS~contentHash.ext
+
+iteracion continua:
+    - indexado
+        luego recorrer el indice para aplicar operaciones
+    - sort-by-exif
+    - dedupe
+        reemplazando por hardlinks?
+    - propagacion con rsync
+        borrado con backup a dir trash
+            dedupe borrando si esta en trash

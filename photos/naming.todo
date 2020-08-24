@@ -1,0 +1,44 @@
+MOV JPG con Fecha/EXIF correcta CON nombre original
+
+   Y/m/d/Y-m-d H.i.s ~ CRC32 ~ NombreOriginal @ Model
+
+MOV JPG con Fecha/EXIF correcta SIN nombre original
+
+   Y/m/d/Y-m-d H.i.s ~ CRC32 @ Model
+
+archivos Photorec CON EXIF
+
+   Y/m/d/Y-m-d H.i.s ~ CRC32 @ Model
+
+archivos Photorec SIN EXIF
+
+   ~ CRC32
+
+
+
+
+
+default
+   jpg: Y/m/d/Y-m-d_H.i.s~Make-Model#MD5   [exif:DateTimeCreated]
+   mp4: Y/m/d/Y-m-d_H.i.s~Make-Model#MD5   [exif:DateTimeCreated]
+   avi: Y/m/d/Y-m-d_H.i.s~Make-Model#MD5   [exif:DateTimeCreated del archivo THM si hay]
+
+
+log/indice de hashes en el raiz?
+   con ruta/nombre actual y anterior al renombrado
+   -> funcion deshacer
+
+-------casos especiales------------
+
+archivos con hora/fecha mal:
+   jpg -> correjir en metadata y archivo?
+   videos -> correjir archivo / metadata si se puede
+      -- dejar info en el log para poder reproducir el proceso --
+
+videos mp4 <samsung-i9300> tiene la fecha EXIF en UTC y la fecha de archivo en hora local
+   (crear copia con la metadata correjida?)
+
+jpg/avi <Canon PowerShotPro1> Fotos desfazadas +-12hs en viaje a china
+   (fix en la metadata o solo en el nombre de archivo?)
+
+fotos de amigos: mezclar? separar? (y como?)
