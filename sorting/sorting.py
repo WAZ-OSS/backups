@@ -39,20 +39,36 @@ def create_index(a_dir, csv_file, file_pattern=".*", json_mirror_dir=None):
 def csv_fields(info, separator="\t"):
     """returns only fields used in json-csv"""
 
-    fields = [info["files"][0].replace(info["canonical"], "CANONICAL"), info["canonical"]]
+    fields = [info["filename"].replace(info["canonical"], "CANONICAL"), info["canonical"]]
 
     return separator.join(fields)
+
+
+def merge(a, b):
+    "merges b into a"
+    for key in b:
+        if key in a:
+            if isinstance(a[key], dict) and isinstance(b[key], dict):
+                merge(a[key], b[key])
+            elif isinstance(a[key], list) and isinstance(b[key], list):
+                a[key].extend(b[key])
+            else:
+                a[key] = b[key]
+        else:
+            a[key] = b[key]
+    return a
 
 
 def update_metadata_json(info, json_mirror_dir=None):
     """creates mirror_dir/canonical.json with info json"""
     metadata_json_path = os.path.join(json_mirror_dir, info["canonical"]) + ".json"
+
+    info["files"] = {info.pop("filename"): {"mtime": info.pop("mtime"), "ctime": info.pop("ctime")}}
+
     if os.path.exists(metadata_json_path):
         with open(metadata_json_path, "r") as old:
-            files = json.load(old)["files"]
-            if info["files"][0] not in files:
-                files.append(info["files"][0])
-            info["files"] = files
+            merge(info, json.load(old))
+
     os.makedirs(os.path.dirname(metadata_json_path), exist_ok=True)
     info.pop("canonical")
     with open(metadata_json_path, "w") as f:
@@ -88,7 +104,7 @@ def get_info(filename):
 
     if filename.startswith("./"):
         filename = filename[2:]
-    info["files"] = [filename]
+    info["filename"] = filename
 
     # canonical default: no-exif/ext/hash.ext
     ext = filename.split(".")[-1].lower()
