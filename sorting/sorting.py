@@ -63,7 +63,7 @@ def update_metadata_json(info, json_mirror_dir=None):
     """creates mirror_dir/canonical.json with info json"""
     metadata_json_path = os.path.join(json_mirror_dir, info["canonical"]) + ".json"
 
-    info["files"] = {info.pop("filename"): {"mtime": info.pop("mtime"), "ctime": info.pop("ctime")}}
+    info["files"] = {info.pop("filename"): {"mtime": info.pop("mtime")}}
 
     if os.path.exists(metadata_json_path):
         with open(metadata_json_path, "r") as old:
@@ -93,7 +93,6 @@ def get_info(filename):
 
     tmp = os.stat(filename)
     info["mtime"] = datetime.datetime.utcfromtimestamp(tmp[stat.ST_MTIME]).strftime("%Y-%m-%d %H:%M:%S")
-    info["ctime"] = datetime.datetime.utcfromtimestamp(tmp[stat.ST_CTIME]).strftime("%Y-%m-%d %H:%M:%S")
     info["md5"] = get_hash(filename, "md5")
     info["size"] = tmp[stat.ST_SIZE]
 
