@@ -152,6 +152,8 @@
     "# MakerNote FlashMode": "Off",
     "# MakerNote FlashSetting": "\u0003",
     "# MakerNote FlashStrength": "33/100",
+    "# MakerNote FocalLength": "355",
+    "# MakerNote FocalType": "Unknown",
     "# MakerNote FocalUnitsPerMM": "1000",
     "# MakerNote FocusMode": "Auto",
     "# MakerNote FocusPixel": "[2144, 1608]",
@@ -210,7 +212,10 @@
     "# MakerNote SlowSync": "Off",
     "# MakerNote SpotMeteringMode": "AF Point",
     "# MakerNote SubjectDistance": "6553",
+    "# MakerNote SuperMacro": "Off",
+    "# MakerNote Tag 0x0000": "[0, 0, 0, 0, 0, 0]",
     "# MakerNote Tag 0x000A": "5/1052688",
+    "# MakerNote Tag 0x0012": "[1, 1, 3264, 2448, 3264, 204, 588, 37, 0, 0, 1, 0]",
     "# MakerNote Tag 0x0015": "AUTO",
     "# MakerNote Tag 0x0018": "[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ... ]",
     "# MakerNote Tag 0x0019": "1",
@@ -247,6 +252,7 @@
     "# MakerNote Tag 0x009F": "12",
     "# MakerNote Tag 0x00A3": "0",
     "# MakerNote Tag 0x00A4": "[48, 51, 48, 48]",
+    "# MakerNote Tag 0x00AE": "[0, 0, 0, 0, 0, 2, 0, 1, 0, 2, 0, 4]",
     "# MakerNote Tag 0x00B2": "NORMAL",
     "# MakerNote Tag 0x00B5": "4098",
     "# MakerNote Tag 0x00BA": "[]",
@@ -321,6 +327,7 @@
     "MakerNote ImageNumber": "1062212",
     "MakerNote InternalSerialNumber": "592D313532313113092722C53UB94549->SerialNumber",
     "MakerNote NikonPreview": "25946",
-    "MakerNote SequenceNumber": "0",
-    "MakerNote SerialNumber": "2099970"
+    "MakerNote OwnerName": "Wenceslao Zuloaga->owner",
+    "MakerNote SequenceNumber": "0->SequenceNumber",
+    "MakerNote SerialNumber": "2099970->SerialNumber"
 }

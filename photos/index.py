@@ -8,6 +8,7 @@ import argparse
 import exifread
 import datetime
 import hashlib
+from functools import partial
 
 
 EXIF_DATETIME_FORMAT = "%Y:%m:%d %H:%M:%S"
@@ -16,10 +17,19 @@ REASONABLE_MIN_DATE = datetime.datetime(2000, 1, 1)
 REASONABLE_MAX_DATE = datetime.datetime.today()
 BLOCK_SIZE = 65536
 exifSample = None
-exifSampleFile = os.path.dirname(os.path.realpath(__file__)) + "/sorting.exif.json"
+exifSampleFile = os.path.dirname(os.path.realpath(__file__)) + "/index.exif.json"
+index_cache = None
 
 
-def create_index(a_dir, csv_file, file_pattern=".*", json_mirror_dir=None):
+def check(a_dir, output_file, index_dir=None):
+    # TODO: check index consistency:
+    # - all files must exists
+    # - undelete existing files marked as deleted?
+    # - consolidate deleted
+    pass
+
+
+def create(a_dir, csv_file, file_pattern=r".+\..+", index_dir=None):
 
     if not os.path.isdir(a_dir):
         raise Exception(f'Invalid target dir "{a_dir}"')
@@ -28,10 +38,9 @@ def create_index(a_dir, csv_file, file_pattern=".*", json_mirror_dir=None):
 
     os.makedirs(os.path.dirname(csv_file), exist_ok=True)
     with open(csv_file, "a") as handler:
-        for info in get_files_callback(".", file_pattern, get_info):
+        for info in get_files_callback(".", file_pattern, partial(get_info, index_dir=index_dir)):
             handler.write(csv_fields(info) + "\n")
-            if json_mirror_dir:
-                update_metadata_json(info, json_mirror_dir)
+            update_metadata_json(info, index_dir)
 
     # TODO: sort && deduplicate csv_file
 
@@ -81,13 +90,21 @@ def get_files_callback(path, file_pattern=".*", callback=None):
         for filename in filenames:
             if filename != ".DS_Store" and re.match(file_pattern, filename):
                 if callable(callback):
-                    yield callback(os.path.join(dirpath, filename))
+                    something = callback(os.path.join(dirpath, filename))
+                    if something:
+                        yield something
                 else:
                     yield os.path.join(dirpath, filename)
 
 
-def get_info(filename):
+def get_info(filename, index_dir):
     """Get metadata from file (exif,fs,hash)"""
+
+    if is_already_indexed(filename, index_dir):
+        # this is to avoid OneDrive-files-onDemean(R) redownload de file if is on the cloud
+        # TODO: make some more checking? like same mtime - check if it is available when file is online
+        # print("[INFO] already indexed: ", filename)
+        return None
 
     info = {}
 
@@ -118,6 +135,42 @@ def get_info(filename):
         info.pop("time_gps_path")
 
     return info
+
+
+def is_already_indexed(filename, index_dir):
+    """mostly inneficient search of filename in the index pool"""
+    global index_cache
+    if not index_cache:
+        index_cache = populate_index_cache(index_dir)
+
+    if filename.startswith("./"):
+        filename = filename[2:]
+
+    return filename in index_cache
+
+
+def populate_index_cache(index_dir):
+    result = {}
+    for files in get_files_callback(index_dir, file_pattern=".*.json", callback=get_files_field):
+        result.update(files)
+
+    return result
+
+
+def get_files_field(json_file):
+
+    files = {}
+    with open(json_file, "r") as f:
+        info = json.load(f)
+
+    for filename in info["files"]:
+        files[filename] = json_file
+
+    # for filename in info["deleted"]:
+    # if it was deleted and now it is copied there again
+    # ...maybe has changed, so consider it a not indexed
+
+    return files
 
 
 def get_exif(filename, stop_tag=None):
@@ -236,8 +289,8 @@ def get_hash(filename, algo):
 
 def exec_as_main():
     path_default = os.path.expanduser("~/fotos")
-    index_default = os.path.dirname(os.path.realpath(__file__)) + "/.tmp/sort-index.tsv"
-    json_mirror_dir_default = os.path.dirname(os.path.realpath(__file__)) + "/.tmp"
+    index_default = os.path.expanduser("~/fotos.index/index.tsv")
+    json_mirror_dir_default = os.path.expanduser("~/fotos.index")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("path", help=f"base path to index [{path_default}]", nargs="?", default=path_default)
@@ -252,7 +305,7 @@ def exec_as_main():
 
     print(f"{args.path} {args.index_file} {args.json_mirror_dir})")
 
-    create_index(args.path, args.index_file, json_mirror_dir=args.json_mirror_dir)
+    create(args.path, args.index_file, index_dir=args.json_mirror_dir)
 
 
 # test
