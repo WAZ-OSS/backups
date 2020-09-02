@@ -14,3 +14,12 @@ iteracion continua:
     - propagacion con rsync
         borrado con backup a dir trash
             dedupe borrando si esta en trash
+
+next:
+    ☐ meter index y recycle dentro de fotos/
+        ignorar al indexar / deduplicar
+        rutas en el bash relativas a fotos/
+    ☐ [dedupe] priorizar lo que esta dentro de /0/ o algun otro dir convencion
+    ☐ script rsync raspi
+        ☐ copia
+        ☐ --delete backup @.debris
