@@ -15,7 +15,8 @@ back_dir=$(dirname $logfile)
 mkdir -p $back_dir
 lockfile="$(dirname $(mktemp -u))/rsync.lock"
 
-flock -n $lockfile -c "rsync --archive --checksum \
+#  --checksum
+flock -n $lockfile -c "rsync --archive \
 --delete --backup --backup-dir=$back_now --exclude=$trash \
 $SOURCE_DIR/ $DESTINATION_DIR/ 2>&1 | tee -a $logfile"
 # --itemize-changes \
