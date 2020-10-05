@@ -1,6 +1,0 @@
-https://docs.microsoft.com/en-us/onedrive/files-on-demand-mac
-
-Files On-Demand state	File attribute state	Command
-Always available:    Pinned         /Applications/OneDrive.App/Contents/MacOS/OneDrive /setpin <path>
-Locally available:   Clearpin       /Applications/OneDrive.App/Contents/MacOS/OneDrive /clearpin <path>
-Online-only:         Unpinned       /Applications/OneDrive.App/Contents/MacOS/OneDrive /unpin <path>
