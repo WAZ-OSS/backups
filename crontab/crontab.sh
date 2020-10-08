@@ -1,8 +1,8 @@
 #/bin/bash
 
-LOGFILE=/var/log/crontab-sync.log
-
 cd "$(dirname "$0")"
+
+LOGFILE="$(pwd)/.debris/$(basename "$0").log"
 
 if [ -z ${THIS_IS_CRON+x} ]; then
     cron_command="THIS_IS_CRON=1 $(pwd)/$(basename $0) 2>&1"
@@ -18,7 +18,7 @@ if [ -z ${THIS_IS_CRON+x} ]; then
     exit 0
 fi
 now=`TZ=America/Buenos_Aires date +'%Y-%m-%d %H:%M:%S UTC%z'`
-echo $now
+echo -e "\n$now"
 lockfile="$(dirname $(mktemp -u))/crontab.lock"
 (flock -n -e 200 && {   
 
