@@ -9,7 +9,7 @@ if [ -z ${THIS_IS_CRON+x} ]; then
     echo "
 # add this to crontab:
 
-0 * * * * $cron_command >>$LOGFILE
+0 */8 * * * $cron_command >>$LOGFILE
 "
     echo "ENTER TO RUN NOW (with DEBUG=1), ctl+c to exit "
     read sarasa
@@ -17,8 +17,10 @@ if [ -z ${THIS_IS_CRON+x} ]; then
     eval "DEBUG=1 $cron_command | tee -a $LOGFILE"
     exit 0
 fi
+now=`TZ=America/Buenos_Aires date +'%Y-%m-%d %H:%M:%S UTC%z'`
+echo $now
 lockfile="$(dirname $(mktemp -u))/crontab.lock"
-(flock -n -e 200 && {
+(flock -n -e 200 && {   
 
     ./rclone.sh ody:/ ody
 
