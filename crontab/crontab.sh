@@ -18,15 +18,20 @@ if [ -z ${THIS_IS_CRON+x} ]; then
     exit 0
 fi
 now=`TZ=America/Buenos_Aires date +'%Y-%m-%d %H:%M:%S UTC%z'`
-echo -e "\n$now"
+[ ! -z ${DEBUG+x} ] && echo -e "\n$now"
+
+declare -a commands=(
+    "./rclone.sh ody:/ ody"
+    "./rclone.sh odw:/ odw"
+    "./rsync.sh"
+    )
+
 lockfile="$(dirname $(mktemp -u))/crontab.lock"
 (flock -n -e 200 && {   
-
-    ./rclone.sh ody:/ ody
-
-    ./rclone.sh odw:/ odw
-
-    ./rsync.sh
-
-    } || echo -e "\n$lockfile LOCKED"
+    for cmd in "${commands[@]}"
+    do
+        [ ! -z ${DEBUG+x} ] && echo "########### $cmd"
+        eval "$cmd" || exit 1
+    done
+    } || echo -e "\n$now $lockfile LOCKED"
 ) 200>$lockfile

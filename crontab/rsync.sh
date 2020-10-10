@@ -12,18 +12,18 @@ back_now="$trash/$now"
 logfile="$DESTINATION_DIR/$back_now/rsync.log"
 
 back_dir=$(dirname $logfile)
-mkdir -p $back_dir
+mkdir -p $back_dir || exit 1
 lockfile="$(dirname $(mktemp -u))/rsync.lock"
 
-SWITCHES="--archive --delete --backup --backup-dir=$back_now --exclude=$trash"
+SWITCHES=" --archive  --delete  --backup  --backup-dir=$back_now  --exclude=$trash"
 if [ ! -z ${DEBUG+x} ]; then
-    SWITCHES+=" --progress --itemize-changes --verbose"
-    # --checksum --partial --compress --dry-run
+    SWITCHES+="  --progress  --itemize-changes  --verbose  --dry-run"
+    #  --checksum  --partial  --compress
 fi
 
 cmd="rsync $SOURCE_DIR/ $DESTINATION_DIR/ $SWITCHES 2>&1|tee -a $logfile"
 
-echo "$cmd"
+[ ! -z ${DEBUG+x} ] && echo "########### $cmd"|sed 's/  +/ \\\n\t\t\t/g'
 
 flock -n $lockfile -c "$cmd" || echo -e "\n$lockfile LOCKED"
 
@@ -34,4 +34,4 @@ flock -n $lockfile -c "$cmd" || echo -e "\n$lockfile LOCKED"
 [ -z "$(ls -A $(dirname $back_dir))" ] && rmdir $(dirname $back_dir)
 
 # prepend sync command if there is log file
-[ -e $logfile ] && echo -e "$cmd\n\n"|sed 's/ / \\\n\t/g'|cat - $logfile > $logfile.tmp && mv $logfile.tmp $logfile
+[ -e $logfile ] && echo -e "# $cmd\n\n"|sed 's/ / \\\n\t/g'|cat - $logfile > $logfile.tmp && mv $logfile.tmp $logfile
