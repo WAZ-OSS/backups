@@ -4,16 +4,17 @@ import os
 import argparse
 import subprocess
 from datetime import datetime
+from decouple import config
 
 parser = argparse.ArgumentParser()
-parser.add_argument("target", help="target location ie: [hostname:]/path")
-parser.add_argument("origin", help="origin location", nargs="?", default=".")
-parser.add_argument("backupDir", help="file to log output", nargs="?", default=".debris")
+parser.add_argument("target", help="target dir ie: [hostname:]/path")
+parser.add_argument("origin", help="origin dir", nargs="?", default=config("base_dir"))
+parser.add_argument("trash", help="trash dir", nargs="?", default=config("trash"))
 args = parser.parse_args()
 
-backupDir = args.backupDir + "/" + datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
+trash = args.trash + "/" + datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
 
-os.makedirs(args.backupDir, exist_ok=True)
+os.makedirs(args.trash, exist_ok=True)
 
 cli_parmas = [
     "rsync",
@@ -22,19 +23,19 @@ cli_parmas = [
     "--partial",
     # "--progress",
     # "--verbose",
-    "--exclude=" + args.backupDir,
+    "--exclude=" + args.trash,
     "--delete",
     "--backup",
-    "--backup-dir=" + backupDir,
+    "--backup-dir=" + trash,
     "--itemize-changes",
     # "--dry-run",
     args.origin,
     args.target,
 ]
 
-with open(f"{backupDir}.log", "w") as output:
+with open(f"{trash}.log", "w") as output:
 
-    process = subprocess.Popen(cli_parmas, stdout=output, universal_newlines=True)
+    process = subprocess.Popen(cli_parmas, stdout=output)
 
     while True:
         return_code = process.poll()
