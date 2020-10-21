@@ -23,3 +23,7 @@ next:
     ☐ script rsync raspi
         ☐ copia
         ☐ --delete backup @.debris
+
+ver:
+    http://www.mikerubel.org/computers/rsync_snapshots/
+    https://pypi.org/project/rotate-backups/
