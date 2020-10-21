@@ -9,6 +9,7 @@ import exifread
 import datetime
 import hashlib
 from functools import partial
+from decouple import config
 
 
 EXIF_DATETIME_FORMAT = "%Y:%m:%d %H:%M:%S"
@@ -29,26 +30,40 @@ def check(a_dir, output_file, index_dir=None):
     pass
 
 
-def create(a_dir, csv_file, file_pattern=r".+\..+", index_dir=None):
+def create(photos_dir, index_subdir, trash_subdir, include=r".+\..+"):
 
-    if not os.path.isdir(a_dir):
-        raise Exception(f'Invalid target dir "{a_dir}"')
+    if not os.path.isdir(photos_dir):
+        raise Exception(f'Invalid target dir "{photos_dir}"')
 
-    os.chdir(a_dir)  # para que las rutas en el indice sean relativas al basedir indexado
+    os.chdir(
+        photos_dir
+    )  # para que las rutas en el indice sean relativas al basedir indexado
 
-    os.makedirs(os.path.dirname(csv_file), exist_ok=True)
-    with open(csv_file, "a") as handler:
-        for info in get_files_callback(".", file_pattern, partial(get_info, index_dir=index_dir)):
+    index_dir = os.path.join(photos_dir, index_subdir)
+    os.makedirs(index_dir, exist_ok=True)
+
+    exclude = "|".join([index_subdir, trash_subdir, config("pattern_exclude")])
+
+    with open(os.path.join(index_dir, config("index_log_file")), "a") as handler:
+        for info in get_files_callback(
+            ".",
+            partial(get_info, index_dir=index_dir),
+            include=include,
+            exclude=exclude,
+        ):
             handler.write(csv_fields(info) + "\n")
             update_metadata_json(info, index_dir)
 
-    # TODO: sort && deduplicate csv_file
+    # TODO: sort && deduplicate index_log
 
 
 def csv_fields(info, separator="\t"):
     """returns only fields used in json-csv"""
 
-    fields = [info["filename"].replace(info["canonical"], "CANONICAL"), info["canonical"]]
+    fields = [
+        info["filename"].replace(info["canonical"], "CANONICAL"),
+        info["canonical"],
+    ]
 
     return separator.join(fields)
 
@@ -84,17 +99,20 @@ def update_metadata_json(info, json_mirror_dir=None):
         json.dump(info, f, ensure_ascii=False, sort_keys=True, indent=4)
 
 
-def get_files_callback(path, file_pattern=".*", callback=None):
+def get_files_callback(path, callback=None, include=".*", exclude=None):
     """generates all descendant files of the path that match the file pattern"""
     for (dirpath, _, filenames) in os.walk(path):
         for filename in filenames:
-            if filename != ".DS_Store" and re.match(file_pattern, filename):
+            full_path = os.path.join(dirpath, filename)
+            if exclude and re.match(exclude, full_path, re.IGNORECASE):
+                next
+            if re.match(include, full_path):
                 if callable(callback):
-                    something = callback(os.path.join(dirpath, filename))
+                    something = callback(full_path)
                     if something:
                         yield something
                 else:
-                    yield os.path.join(dirpath, filename)
+                    yield full_path
 
 
 def get_info(filename, index_dir):
@@ -109,7 +127,9 @@ def get_info(filename, index_dir):
     info = {}
 
     tmp = os.stat(filename)
-    info["mtime"] = datetime.datetime.utcfromtimestamp(tmp[stat.ST_MTIME]).strftime("%Y-%m-%d %H:%M:%S")
+    info["mtime"] = datetime.datetime.utcfromtimestamp(tmp[stat.ST_MTIME]).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
     info["md5"] = get_hash(filename, "md5")
     info["size"] = tmp[stat.ST_SIZE]
 
@@ -151,7 +171,9 @@ def is_already_indexed(filename, index_dir):
 
 def populate_index_cache(index_dir):
     result = {}
-    for files in get_files_callback(index_dir, file_pattern=".*.json", callback=get_files_field):
+    for files in get_files_callback(
+        index_dir, callback=get_files_field, include=".*\\.json"
+    ):
         result.update(files)
 
     return result
@@ -185,7 +207,11 @@ def get_exif(filename, stop_tag=None):
     if not bool(tags):
         return {}
 
-    tagsp = {t: v.printable.strip() for t, v in tags.items() if hasattr(v, "printable") and v.printable.strip() != ""}
+    tagsp = {
+        t: v.printable.strip()
+        for t, v in tags.items()
+        if hasattr(v, "printable") and v.printable.strip() != ""
+    }
 
     if exifSample is None:
         try:
@@ -225,12 +251,16 @@ def get_exif(filename, stop_tag=None):
 
     if exifSampleUpdated:
         with open(exifSampleFile, "w") as f:
-            f.write(json.dumps(exifSample, ensure_ascii=False, sort_keys=True, indent=4))
+            f.write(
+                json.dumps(exifSample, ensure_ascii=False, sort_keys=True, indent=4)
+            )
         # raise Exception("check exifSample.json rules")
 
     if "time_exif" in exif:
         try:
-            datetimetuple = datetime.datetime.strptime(exif["time_exif"], EXIF_DATETIME_FORMAT)
+            datetimetuple = datetime.datetime.strptime(
+                exif["time_exif"], EXIF_DATETIME_FORMAT
+            )
             exif["time_exif"] = datetimetuple.strftime("%Y-%m-%d %H:%M:%S")
             exif["time_exif_path"] = datetimetuple.strftime("%Y/%m/%d/%Y%m%d_%H%M%S")
             if not (REASONABLE_MIN_DATE <= datetimetuple <= REASONABLE_MAX_DATE):
@@ -240,7 +270,9 @@ def get_exif(filename, stop_tag=None):
 
     if "time_gps" in exif:
         try:
-            datetimetuple = datetime.datetime.strptime(exif["time_gps"], GPS_DATETIME_FORMAT)
+            datetimetuple = datetime.datetime.strptime(
+                exif["time_gps"], GPS_DATETIME_FORMAT
+            )
             exif["time_gps"] = datetimetuple.strftime("%Y-%m-%d %H:%M:%S")
             if REASONABLE_MIN_DATE <= datetimetuple <= REASONABLE_MAX_DATE:
                 exif["time_gps_path"] = datetimetuple.strftime("%Y/%m/%d/%Y%m%d_%H%M%S")
@@ -250,10 +282,24 @@ def get_exif(filename, stop_tag=None):
             print(f"[WARN] time_g: {exif['time_gps']} @{filename}")
 
     if "EXIF DateTimeOriginal" in tagsp:
-        if "EXIF DateTimeDigitized" in tagsp and tagsp["EXIF DateTimeDigitized"] != tagsp["EXIF DateTimeOriginal"]:
-            print("[WARN?] DateTimeOriginal != DateTimeDigitized", tagsp["EXIF DateTimeOriginal"], tagsp["EXIF DateTimeDigitized"])
-        if "Image DateTime" in tagsp and tagsp["Image DateTime"] != tagsp["EXIF DateTimeOriginal"]:
-            print("[WARN?] DateTimeOriginal != Image DateTime", tagsp["EXIF DateTimeOriginal"], tagsp["Image DateTime"])
+        if (
+            "EXIF DateTimeDigitized" in tagsp
+            and tagsp["EXIF DateTimeDigitized"] != tagsp["EXIF DateTimeOriginal"]
+        ):
+            print(
+                "[WARN?] DateTimeOriginal != DateTimeDigitized",
+                tagsp["EXIF DateTimeOriginal"],
+                tagsp["EXIF DateTimeDigitized"],
+            )
+        if (
+            "Image DateTime" in tagsp
+            and tagsp["Image DateTime"] != tagsp["EXIF DateTimeOriginal"]
+        ):
+            print(
+                "[WARN?] DateTimeOriginal != Image DateTime",
+                tagsp["EXIF DateTimeOriginal"],
+                tagsp["Image DateTime"],
+            )
 
     exif["~"] = to_index
     # exif["~1"] = tagsp
@@ -285,29 +331,3 @@ def get_hash(filename, algo):
 # TODO: automate dedupe in DB: field state{present|absent} (1 copy/location)
 # TODO: cyclic executor (DB->fs)
 # TODO: cyclic check hashes (DB==fs)
-
-
-def exec_as_main():
-    path_default = os.path.expanduser("~/fotos")
-    index_default = os.path.expanduser("~/fotos.index/index.tsv")
-    json_mirror_dir_default = os.path.expanduser("~/fotos.index")
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("path", help=f"base path to index [{path_default}]", nargs="?", default=path_default)
-    parser.add_argument("index_file", help=f"index file [{index_default}]", nargs="?", default=index_default)
-    parser.add_argument(
-        "json_mirror_dir",
-        help=f"dir to generate canonical matadata-json-tree [{json_mirror_dir_default}]",
-        nargs="?",
-        default=json_mirror_dir_default,
-    )
-    args = parser.parse_args()
-
-    print(f"{args.path} {args.index_file} {args.json_mirror_dir})")
-
-    create(args.path, args.index_file, index_dir=args.json_mirror_dir)
-
-
-# test
-if __name__ == "__main__":
-    exec_as_main()

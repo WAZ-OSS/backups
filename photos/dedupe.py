@@ -53,10 +53,21 @@ def delete_all_but_one(filename, recycle_dir):
             meta = info["files"].pop(file)
             if "deleted" not in info:
                 info["deleted"] = {}
-            while file in info["deleted"]:
-                file += "+"
-            info["deleted"][file] = meta
-            info_updated = True
+            if file not in info["deleted"]:
+                info["deleted"][file] = meta
+                info_updated = True
+            else:
+                if "mtime" not in info["deleted"][file]:
+                    # revisar: a futuro podria pisar otras propiedades
+                    info["deleted"][file].update(meta)
+                    info_updated = True
+                else:
+                    if info["deleted"][file]["mtime"] == meta["mtime"]:
+                        # es el mismo
+                        pass
+                    else:
+                        info["deleted"][file]["mtime+"] = meta["mtime"]
+                        info_updated = True
 
     if info_updated:
         with open(filename, "w") as f:
@@ -81,8 +92,8 @@ def get_files_callback(path, file_pattern=".*", callback=None):
 
 def exec_as_main():
     path_default = os.path.expanduser("~/fotos")
-    dedupe_file_default = os.path.expanduser("~/fotos.index/dedupe.sh")
-    json_mirror_dir_default = os.path.expanduser("~/fotos.index")
+    dedupe_file_default = os.path.expanduser("~/fotos/index/dedupe.sh")
+    json_mirror_dir_default = os.path.expanduser("~/fotos/index")
     recycle_dir_default = os.path.expanduser("~/fotos.recycle")
 
     parser = argparse.ArgumentParser()
