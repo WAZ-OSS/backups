@@ -19,15 +19,13 @@ BKP="$DST.debris/$NOW"
 
 [ -d "$DST" ] || { echo "missing dir $DST" ; exit 666 ; }
 
-CMD="rclone sync $SRC $DST/ --bwlimit-file 2M --transfers 2 --checksum --backup-dir=$BKP"
-# --progress
+CMD="rclone sync $SRC $DST/ --bwlimit-file 2M --transfers 2 --checksum --backup-dir=$BKP -v --log-file $BKP/rclone.log --progress"
+# --stats 60s
 if [ "$DOIT" != 'doit' ]
 then
     echo "missing [doit] => executing dry-run mode";
     CMD="$CMD --dry-run";
 fi
-
-CMD="$CMD 2>&1 |tee -a $BKP/rclone.log";
 
 echo -e "\n$CMD"
 read -p "Press any key to continue ... (ctr+c to abort)" -n1 -s
