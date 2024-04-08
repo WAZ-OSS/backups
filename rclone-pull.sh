@@ -13,11 +13,11 @@ SRC="$REMOTE:/"
 DST="$REMOTE"
 
 NOW="$(date +%Y-%m-%d_%H.%M)"
-BKP="$DST.debris/$NOW"
+BKP="$DST.debris/$NOW-rclone"
 
 [ -d "$DST" ] || {
     echo "missing dir $DST"
-    exit 666
+    exit 1
 }
 
 CMD="rclone sync $SRC $DST/ --track-renames --bwlimit-file 1M --transfers 2 --checksum --backup-dir=$BKP -v --log-file $BKP/rclone.log --progress"
@@ -28,9 +28,10 @@ if [ "$DOIT" != 'doit' ]; then
 fi
 
 echo -e "\n$CMD"
-read -p "Press any key to continue ... (ctr+c to abort)" -n1 -s
+read -p "Press any key to continue ... (ctr+c to abort)" -n1 -s -r
 
-mkdir -p $BKP
+mkdir -p "$BKP"
+echo -e "$CMD\n" >>"$BKP/rclone.log"
 eval "$CMD"
 
 echo "cleanup small files in $BKP"
@@ -39,5 +40,3 @@ echo "cleanup small files in $BKP"
 # find "$BKP/" -type f -size -4096 -exec ls -l "{}" \; -print # -delete
 echo "cleanup empty dirs in $BKP"
 # find "$BKP/" -type d -empty -print -delete
-
-ps fax | grep rcl[o]ne

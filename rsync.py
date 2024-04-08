@@ -4,18 +4,18 @@ import os
 import argparse
 import subprocess
 from datetime import datetime
-from decouple import config
 
 parser = argparse.ArgumentParser()
-parser.add_argument("origin", help="origin dir", nargs="?", default=config("base_dir"))
-parser.add_argument("target", help="target dir ie: [hostname:]/path")
-parser.add_argument("trash", help="trash dir", nargs="?", default=config("trash"))
-parser.add_argument("doit", help="any string (if missing will run rsync with '--dry-run')", nargs="?", default="")
+parser.add_argument("origin", help="origin dir ie: [localpath/important-stuff-dir]")
+parser.add_argument("target", help="target dir ie: [hostname:]/path/backups")
+parser.add_argument("doit", help="(if missing will run rsync with '--dry-run')", nargs="?", default="")
+parser.add_argument("trash", help="trash dir (default: .debris)", nargs="?", default=".debris")
 args = parser.parse_args()
 
-trash = args.target + args.trash + "/" + datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
+trash = args.target + args.trash + "/" + datetime.now().strftime("%Y-%m-%d_%H.%M") + "-rsync"
+logfile = f"{trash}/rsync.log"
 
-os.makedirs(args.trash, exist_ok=True)
+os.makedirs(trash, exist_ok=True)
 
 cli_parmas = [
     "rsync",
@@ -35,13 +35,13 @@ cli_parmas = [
     args.target,
 ]
 
-if args.doit == "":
+if args.doit != "doit":
     cli_parmas += ["--dry-run"]
 
 
-print(" ".join(cli_parmas) + f" >{trash}.log")
+print(" ".join(cli_parmas) + f" >{logfile}")
 
-with open(f"{trash}.log", "w") as output:
+with open(f"{logfile}", "w") as output:
 
     process = subprocess.Popen(cli_parmas, stdout=output)
 
