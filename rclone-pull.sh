@@ -12,26 +12,41 @@ REMOTE=${1%/}
 SRC="$REMOTE:/"
 DST="$REMOTE"
 
-NOW="$(date +%Y-%m-%d_%H.%M)"
-BKP="$DST.debris/$NOW-rclone"
-
 [ -d "$DST" ] || {
     echo "missing dir $DST"
     exit 1
 }
 
-CMD="rclone sync $SRC $DST/ --track-renames --bwlimit-file 1M --transfers 2 --checksum --backup-dir=$BKP -v --log-file $BKP/rclone.log --progress"
-# --stats 60s
 if [ "$DOIT" != 'doit' ]; then
     echo "missing [doit] => executing dry-run mode"
-    CMD="$CMD --dry-run"
+    SUFFIX="--dry-run"
 fi
 
+NOW="$(date +%Y-%m-%d_%H.%M)"
+BKP=".debris/$DST/$NOW-rclone$SUFFIX"
+LOG_FILENAME=rclone.log
+
+CMD="rclone sync \\
+    $SRC \\
+    $DST/ \\
+    --track-renames \\
+    --bwlimit-file 1M \\
+    --transfers 2 \\
+    --checksum \\
+    --backup-dir=$BKP \\
+    --log-file $BKP/$LOG_FILENAME \\
+    --progress \\
+    -v $SUFFIX
+"
+
+echo -e "\ncurrent directory: $(pwd)"
 echo -e "\n$CMD"
 read -p "Press any key to continue ... (ctr+c to abort)" -n1 -s -r
 
 mkdir -p "$BKP"
-echo -e "$CMD\n" >>"$BKP/rclone.log"
+echo -e "\n\n[$(date +'%Y-%m-%d %H:%M:%S %Z')] syncing...\n" | tee -a "$BKP/$LOG_FILENAME"
+
+echo -e "$CMD\n" >>"$BKP/$LOG_FILENAME"
 eval "$CMD"
 
 echo "cleanup small files in $BKP"
