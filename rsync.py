@@ -3,6 +3,7 @@
 import os
 import argparse
 import subprocess
+import time
 from datetime import datetime
 
 parser = argparse.ArgumentParser()
@@ -36,9 +37,14 @@ if not os.path.isdir(args.target):
     print(f"\nERROR: target dir '{args.target}' is not a directory")
     exit(1)
 
+dry_run = ""
+if args.doit != "doit":
+    dry_run = "--dry-run"
+    print("- this will run in SIMULATION-MODE (to do a real run add thue ' doit' argument)\n")
+
 target_leaf = args.target.split("/")[-2]
 target_parent = "/".join(args.target.split("/")[0:-2])
-trash_dir = f"{target_parent}/{args.trash}/{target_leaf}/" + datetime.now().strftime("%Y-%m-%d_%H.%M-rsync")
+trash_dir = f"{target_parent}/{args.trash}/{target_leaf}/" + datetime.now().strftime("%Y-%m-%d_%H.%M-rsync") + dry_run
 logfile = f"{trash_dir}/rsync.log"
 
 cli_parmas = [
@@ -55,6 +61,7 @@ cli_parmas = [
     "--itemize-changes",
     # "--delete-after",
     "--delete-delay",
+    dry_run,
 ]
 
 print("This will rsync CONTENTS of dir:")
@@ -64,12 +71,11 @@ origin = args.origin
 if args.origin[0] != "/":
     print("- Current directory: " + os.getcwd())
     origin = os.getcwd() + "/" + args.origin
-if args.doit != "doit":
-    cli_parmas += ["--dry-run"]
-    print("- this will run in SIMULATION-MODE (to do a real run add thue ' doit' argument)\n")
 
 cli_parmas += [origin]
 cli_parmas += [args.target]
+
+cli_parmas = [p for p in cli_parmas if p != ""]
 
 bash_command = " \\\n\t".join(cli_parmas) + f" \\\n\t>>{logfile}\n"
 print("\ncommand:")
@@ -82,6 +88,7 @@ try:
     os.makedirs(trash_dir, exist_ok=True)
 
     with open(f"{logfile}", "w") as output:
+        print(datetime.now().strftime(f"\n[%Y-%m-%d %H:%M:%S {time.tzname[time.daylight]}]\n"), file=output)
         print(bash_command, file=output)
 
     with open(f"{logfile}", "a") as output:
@@ -97,7 +104,7 @@ try:
 except KeyboardInterrupt:
     print("Canceled")
 
-'''
+"""
 rsync_log_itemize_help:
 
 YXcstpoguax  path/to/file
@@ -129,4 +136,4 @@ YXcstpoguax  path/to/file
        `---- g: Group is different
         `--- u: The u slot is reserved for future use.
          `-- a: The ACL information changed
-'''
+"""
