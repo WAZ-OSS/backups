@@ -1,5 +1,5 @@
 #!/bin/env bash
-set -e
+# set -e # crontab workaround
 
 cycleMinutes=1440 # 1 day
 
@@ -27,8 +27,7 @@ LOGFILE="$LOGSDIR/$NOW-$(basename "$0").log"
 RECENTLOGS=$(find "$LOGSDIR" -iname "*-$(basename "$0").log" -mmin "-$MINUTES")
 if [ "$RECENTLOGS" != "" ]
 then
-    # echo "already ran less than $MINUTES minutes ago:"
-    # echo "$RECENTLOGS"
+    # echo "[$(date +'%Y-%m-%d %H:%M:%S %Z')] Already ran less than $MINUTES minutes ago: $RECENTLOGS"
     exit 0
 fi
 
