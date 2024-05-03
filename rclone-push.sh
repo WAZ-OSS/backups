@@ -1,9 +1,11 @@
-#!/bin/bash
+#!/bin/env bash
+set -e
 
 DOIT=${2:-dontdoit}
+DONTASK=${3:-ask}
 
 if [ -z "$1" ]; then
-    echo "usage: $0 REMOTE [doit]"
+    echo "usage: $0 REMOTE [doit] [dontask]"
     exit 1
 fi
 
@@ -24,7 +26,7 @@ if [ "$DOIT" != 'doit' ]; then
 fi
 
 echo -e "\n$CMD"
-read -p "Press any key to continue ... (ctr+c to abort)" -n1 -s -r
+[ "$DONTASK" == 'dontask' ] || read -p "Press any key to continue ... (ctr+c to abort)" -n1 -s -r
 
 echo "cleanup small files in $SRC ..."
 find . -iname '.DS_store' -delete
