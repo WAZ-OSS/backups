@@ -37,12 +37,11 @@ CMD="rclone sync \\
     --checksum \\
     --backup-dir=$BKP \\
     --log-file $BKP/$LOG_FILENAME \\
-    --progress \\
     -v $SUFFIX
 "
 
-echo -e "\ncurrent directory: $(pwd)"
-echo -e "\n$CMD"
+# echo -e "\ncurrent directory: $(pwd)"
+# echo -e "\n$CMD"
 [ "$DONTASK" == 'dontask' ] || read -p "Press any key to continue ... (ctr+c to abort)" -n1 -s -r
 
 mkdir -p "$BKP"
@@ -51,9 +50,9 @@ echo -e "\n\n[$(date +'%Y-%m-%d %H:%M:%S %Z')] syncing...\n" | tee -a "$BKP/$LOG
 echo -e "$CMD\n" >>"$BKP/$LOG_FILENAME"
 eval "$CMD"
 
-echo "cleanup small files in $BKP"
-find . -iname '.DS_store' # -delete
-find "$BKP/" -iname '._.ds_store' # -delete
-find "$BKP/" -type f -size -4096 -exec ls -l "{}" \; -print # -delete
-echo "cleanup empty dirs in $BKP"
-find "$BKP/" -type d -empty -print # -delete
+# echo "cleanup small files in $BKP"
+# find . -iname '.DS_store' # -delete
+# find "$BKP/" -iname '._.ds_store' # -delete
+# find "$BKP/" -type f -size -4096 -exec ls -l "{}" \; -print # -delete
+# echo "cleanup empty dirs in $BKP"
+# find "$BKP/" -type d -empty -print # -delete

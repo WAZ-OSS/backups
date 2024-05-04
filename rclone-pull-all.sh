@@ -17,7 +17,8 @@ DOIT=${2:-dontdoit}
 DONTASK=${3:-ask}
 MINUTES=${4:-$cycleMinutes}
 
-cd "$REMOTESDIR"
+SCRIPTSDIR=$(dirname "$0")
+cd "$REMOTESDIR" || { echo "cannot cd to '$REMOTESDIR'"; exit 1; }
 
 LOGSDIR="$REMOTESDIR/.debris"
 mkdir -p "$LOGSDIR"
@@ -32,8 +33,8 @@ then
 fi
 
 for REMOTE in */; do
-    echo "[$(date +'%Y-%m-%d %H:%M:%S %Z')] $REMOTE START"
+    echo "[$(date +'%Y-%m-%d %H:%M:%S %Z')] ${REMOTE%/}"
     SECONDS=0
-    rclone-pull.sh "$REMOTE" "$DOIT" "$DONTASK" >>"$LOGFILE" || echo -e "[ERROR] code: $?"
-    echo "[$(date +'%Y-%m-%d %H:%M:%S %Z')] $REMOTE DONE (took $(TZ=UTC0 printf '%(%H:%M:%S)T' "$SECONDS"))"
+    "$SCRIPTSDIR"/rclone-pull.sh "$REMOTE" "$DOIT" "$DONTASK" >>"$LOGFILE" || echo -e "[ERROR] code: $?"
+    echo "[$(date +'%Y-%m-%d %H:%M:%S %Z')] $(TZ=UTC0 printf '%(%H:%M:%S)T' "$SECONDS")"
 done
