@@ -25,16 +25,23 @@ mkdir -p "$LOGSDIR"
 NOW="$(date +%Y-%m-%d_%H.%M)"
 LOGFILE="$LOGSDIR/$NOW-$(basename "$0").log"
 
-RECENTLOGS=$(find "$LOGSDIR" -iname "*-$(basename "$0").log" -mmin "-$MINUTES")
-if [ "$RECENTLOGS" != "" ]
-then
-    # echo "[$(date +'%Y-%m-%d %H:%M:%S %Z')] Already ran less than $MINUTES minutes ago: $RECENTLOGS"
-    exit 0
-fi
-
 for REMOTE in */; do
+    SUCCESSLOGFILE=success.log
+    RECENTLOGS=$(find "$LOGSDIR/$REMOTE" -name "$SUCCESSLOGFILE" -mmin "-$MINUTES")
+    if [ "$RECENTLOGS" != "" ]
+    then
+        # echo "[$(date +'%Y-%m-%d %H:%M:%S %Z')] Already ran less than $MINUTES minutes ago: $RECENTLOGS"
+        continue
+    fi
+
     echo "[$(date +'%Y-%m-%d %H:%M:%S %Z')] ${REMOTE%/}"
     SECONDS=0
-    "$SCRIPTSDIR"/rclone-pull.sh "$REMOTE" "$DOIT" "$DONTASK" >>"$LOGFILE" || echo -e "[ERROR] code: $?"
+    "$SCRIPTSDIR"/rclone-pull.sh "$REMOTE" "$DOIT" "$DONTASK" >>"$LOGFILE"
+    RETURNCODE=$?
+    if [ $RETURNCODE -eq 0 ]; then
+        date +'%Y-%m-%d %H:%M:%S %Z' >>"$LOGSDIR/$REMOTE$SUCCESSLOGFILE"
+    else
+        echo -e "[ERROR] code: $RETURNCODE"
+    fi
     echo "[$(date +'%Y-%m-%d %H:%M:%S %Z')] $(TZ=UTC0 printf '%(%H:%M:%S)T' "$SECONDS")"
 done
