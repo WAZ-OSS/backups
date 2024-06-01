@@ -21,13 +21,13 @@ SCRIPTSDIR=$(dirname "$0")
 cd "$REMOTESDIR" || { echo "cannot cd to '$REMOTESDIR'"; exit 1; }
 
 LOGSDIR="$REMOTESDIR/.debris"
-mkdir -p "$LOGSDIR"
-NOW="$(date +%Y-%m-%d_%H.%M)"
-LOGFILE="$LOGSDIR/$NOW-$(basename "$0").log"
+LOGSDIR_YEAR="$LOGSDIR/$(date +%Y)"
+LOGFILE="$LOGSDIR_YEAR/$(date +%m)/00_$(basename "$0").log"
+mkdir -p "$(dirname "$LOGFILE")"
 
 for REMOTE in */; do
-    SUCCESSLOGFILE=success.log
-    RECENTLOGS=$(find "$LOGSDIR/$REMOTE" -name "$SUCCESSLOGFILE" -mmin "-$MINUTES")
+    SUCCESSFILE="${REMOTE%/}.success.log"
+    RECENTLOGS=$(find "$LOGSDIR_YEAR" -name "$SUCCESSFILE" -mmin "-$MINUTES")
     if [ "$RECENTLOGS" != "" ]
     then
         # echo "[$(date +'%Y-%m-%d %H:%M:%S %Z')] Already ran less than $MINUTES minutes ago: $RECENTLOGS"
@@ -39,7 +39,7 @@ for REMOTE in */; do
     "$SCRIPTSDIR"/rclone-pull.sh "$REMOTE" "$DOIT" "$DONTASK" >>"$LOGFILE"
     RETURNCODE=$?
     if [ $RETURNCODE -eq 0 ]; then
-        date +'%Y-%m-%d %H:%M:%S %Z' >>"$LOGSDIR/$REMOTE$SUCCESSLOGFILE"
+        date +'%Y-%m-%d %H:%M:%S %Z' >>"$LOGSDIR_YEAR/$SUCCESSFILE"
     else
         echo -e "[ERROR] code: $RETURNCODE"
     fi

@@ -26,7 +26,7 @@ fi
 
 NOW="$(date +%Y-%m-%d_%H.%M)"
 BKP=".debris/$DST/$NOW-rclone$SUFFIX"
-LOG_FILENAME=rclone.log
+LOG_FILE=".debris/$(date +%Y/%m/%d_%H.%M)-$DST.log"
 
 CMD="rclone sync \\
     $SRC \\
@@ -36,18 +36,18 @@ CMD="rclone sync \\
     --transfers 2 \\
     --checksum \\
     --backup-dir=$BKP \\
-    --log-file $BKP/$LOG_FILENAME \\
+    --log-file $LOG_FILE \\
     -v $SUFFIX
 "
 
-# echo -e "\ncurrent directory: $(pwd)"
-# echo -e "\n$CMD"
 [ "$DONTASK" == 'dontask' ] || read -p "Press any key to continue ... (ctr+c to abort)" -n1 -s -r
 
 mkdir -p "$BKP"
-echo -e "\n\n[$(date +'%Y-%m-%d %H:%M:%S %Z')] syncing...\n" | tee -a "$BKP/$LOG_FILENAME"
+LOG_DIR=$(dirname "$LOG_FILE")
+mkdir -p "$LOG_DIR"
+echo -e "\n[$(date +'%Y-%m-%d %H:%M:%S %Z')] syncing [$REMOTE]..." | tee -a "$LOG_FILE"
 
-echo -e "$CMD\n" >>"$BKP/$LOG_FILENAME"
+echo -e "$CMD\n" >>"$LOG_FILE"
 eval "$CMD"
 
 # echo "cleanup small files in $BKP"
@@ -55,4 +55,4 @@ eval "$CMD"
 # find "$BKP/" -iname '._.ds_store' # -delete
 # find "$BKP/" -type f -size -4096 -exec ls -l "{}" \; -print # -delete
 # echo "cleanup empty dirs in $BKP"
-# find "$BKP/" -type d -empty -print # -delete
+find "$BKP/" -type d -empty -print -delete
