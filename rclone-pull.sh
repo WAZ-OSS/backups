@@ -55,4 +55,6 @@ eval "$CMD"
 # find "$BKP/" -iname '._.ds_store' # -delete
 # find "$BKP/" -type f -size -4096 -exec ls -l "{}" \; -print # -delete
 # echo "cleanup empty dirs in $BKP"
-find "$BKP/" -type d -empty -print -delete
+if [ -d "$BKP" ]; then
+    find "$BKP/" -type d -empty -print -delete
+fi
