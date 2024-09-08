@@ -50,8 +50,12 @@ for REMOTE in */; do
     RETURNCODE=$?
     if [ $RETURNCODE -eq 0 ]; then
         date +'%Y-%m-%d %H:%M:%S %Z' >>"$LOGSDIR_YEAR/$SUCCESSFILE"
+        echo "[$(date +'%Y-%m-%d %H:%M:%S %Z')] $(TZ=UTC0 printf '%(%H:%M:%S)T' "$SECONDS")"
+        # exit after first successful sync to spread network load.
+        # NOTE: crontab has to rerun before $cycleMinutes/remotes_count to be able to sync all remotes.
+        exit 0
     else
         echo -e "[ERROR] code: $RETURNCODE"
+        echo "[$(date +'%Y-%m-%d %H:%M:%S %Z')] $(TZ=UTC0 printf '%(%H:%M:%S)T' "$SECONDS")"
     fi
-    echo "[$(date +'%Y-%m-%d %H:%M:%S %Z')] $(TZ=UTC0 printf '%(%H:%M:%S)T' "$SECONDS")"
 done
