@@ -1,7 +1,17 @@
 #!/bin/env bash
 # set -e # crontab workaround
 
-cycleMinutes=1440 # 1 day
+lockfile="/var/tmp/$(basename "$0").lock"
+if [ -f "$lockfile" ] ;then
+  echo "lockfile exists, test if process allready running"
+  if kill -0 "$(cat "$lockfile")" ; then
+    echo "Already running. Exiting."
+    exit 0
+  fi
+fi
+echo $$ >"$lockfile"
+
+cycleMinutes=360 # 6 hours
 
 if [ -z "$1" ]; then
     echo "usage: $0 /REMOTES/BASE/DIRECTORY/ [doit] [dontask] [cycleMinutes=$cycleMinutes]"
