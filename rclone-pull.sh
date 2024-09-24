@@ -3,6 +3,9 @@ set -e
 
 DOIT=${2:-dontdoit}
 DONTASK=${3:-ask}
+# https://rclone.org/googlephotos/#size
+# GPHOTOS_BY_YEAR=${4:-gphotos-by-year}
+# --gphotos-include-archived
 
 if [ -z "$1" ]; then
     echo "usage: $0 REMOTE [doit] [dontask]"
