@@ -3,8 +3,7 @@
 
 lockfile="/var/tmp/$(basename "$0").lock"
 if [ -f "$lockfile" ] ;then
-  echo "lockfile exists, test if process allready running"
-  if kill -0 "$(cat "$lockfile")" ; then
+  if kill -s 0 "$(cat "$lockfile")" 2>/dev/null; then
     echo "Already running. Exiting."
     exit 0
   fi
