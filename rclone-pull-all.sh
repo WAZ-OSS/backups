@@ -2,11 +2,11 @@
 # set -e # crontab workaround
 
 lockfile="/var/tmp/$(basename "$0").lock"
-if [ -f "$lockfile" ] ;then
-  if kill -s 0 "$(cat "$lockfile")" 2>/dev/null; then
-    echo "Already running. Exiting."
-    exit 0
-  fi
+if [ -f "$lockfile" ]; then
+    if kill -s 0 "$(cat "$lockfile")" 2>/dev/null; then
+        echo "Already running. Exiting."
+        exit 0
+    fi
 fi
 echo $$ >"$lockfile"
 
@@ -27,7 +27,10 @@ DONTASK=${3:-ask}
 MINUTES=${4:-$cycleMinutes}
 
 SCRIPTSDIR=$(dirname "$0")
-cd "$REMOTESDIR" || { echo "cannot cd to '$REMOTESDIR'"; exit 1; }
+cd "$REMOTESDIR" || {
+    echo "cannot cd to '$REMOTESDIR'"
+    exit 1
+}
 
 LOGSDIR="$REMOTESDIR/.debris"
 LOGSDIR_YEAR="$LOGSDIR/$(date +%Y)"
@@ -37,8 +40,7 @@ mkdir -p "$(dirname "$LOGFILE")"
 for REMOTE in */; do
     SUCCESSFILE="${REMOTE%/}.success.log"
     RECENTLOGS=$(find "$LOGSDIR_YEAR" -name "$SUCCESSFILE" -mmin "-$MINUTES")
-    if [ "$RECENTLOGS" != "" ]
-    then
+    if [ "$RECENTLOGS" != "" ]; then
         # echo "[$(date +'%Y-%m-%d %H:%M:%S %Z')] Already ran less than $MINUTES minutes ago: $RECENTLOGS"
         continue
     fi
