@@ -37,7 +37,20 @@ LOGSDIR_YEAR="$LOGSDIR/$(date +%Y)"
 LOGFILE="$LOGSDIR_YEAR/$(date +%m)/00_$(basename "$0").log"
 mkdir -p "$(dirname "$LOGFILE")"
 
+
+function echoTimestampIfFirstRunOfDay() {
+    DAILYFILE="/tmp/daily.touched"
+    [ -f "$DAILYFILE" ] || touch "$DAILYFILE" -d "yesterday"
+    TOUCHED=$(date '+%Y%m%d' -r "$DAILYFILE")
+    TODAY=$(date '+%Y%m%d')
+    if [[ ${TODAY} -gt ${TOUCHED} ]] ; then
+        echo "[$(date +'%Y-%m-%d %H:%M:%S %Z')] now is a good time to wake up"
+        touch "$DAILYFILE"
+    fi
+}
+
 for REMOTE in */; do
+    echoTimestampIfFirstRunOfDay
     SUCCESSFILE="${REMOTE%/}.success.log"
     RECENTLOGS=$(find "$LOGSDIR_YEAR" -name "$SUCCESSFILE" -mmin "-$MINUTES")
     if [ "$RECENTLOGS" != "" ]; then
