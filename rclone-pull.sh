@@ -30,10 +30,14 @@ fi
 NOW="$(date +%Y-%m-%d_%H.%M)"
 BKP=".debris/$DST/$NOW-rclone$SUFFIX"
 LOG_FILE=".debris/$(date +%Y/%m/%d_%H.%M)-$DST.log"
+EXTRA_PARAMS_FILE="$DST/rclone-params"
+EXTRA_PARAMS="--exclude \"$(basename "$EXTRA_PARAMS_FILE")\""
+[ -f "$EXTRA_PARAMS_FILE" ] && EXTRA_PARAMS+=" $(tr -d "\n" < "$EXTRA_PARAMS_FILE")"
 
 CMD="rclone sync \\
     $SRC \\
     $DST/ \\
+    $EXTRA_PARAMS \\
     --track-renames \\
     --bwlimit-file 1M \\
     --transfers 2 \\
